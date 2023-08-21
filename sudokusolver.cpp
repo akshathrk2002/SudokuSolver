@@ -1,83 +1,97 @@
 #include <iostream>
-#include <string>
-#include <vector>
-#include <map>
 using namespace std;
 
-void helper(int r, int c, vector<vector<char>> &a, map<pair<int, int>, map<int, int>> &mp, vector<map<int, int>> &row, vector<map<int, int>> &col)
-{
-    if (r == 9)
-    {
-        for (auto it : a)
-        {
-            for (auto i : it)
-            {
-                cout << i << " ";
-            }
-            cout << "\n";
+// Function to print the Sudoku grid
+void printGrid(int grid[9][9]) {
+    for (int row = 0; row < 9; row++) {
+        for (int col = 0; col < 9; col++) {
+            cout << grid[row][col] << " ";
         }
-        cout << "\n";
-        return;
-    }
-    if (c == 9)
-    {
-        helper(r + 1, 0, a, mp, row, col);
-        return;
-    }
-    if (a[r][c] != '.')
-    {
-        helper(r, c + 1, a, mp, row, col);
-        return;
-    }
-
-    for (int i = 1; i <= 9; i++)
-    {
-        int rw = r / 3, cl = c / 3;
-        if (!mp[{rw, cl}][i] && !row[r][i] && !col[c][i])
-        {
-            mp[{rw, cl}][i] = 1;
-            row[r][i] = 1;
-            col[c][i] = 1;
-            a[r][c] = i + '0';
-            helper(r, c + 1, a, mp, row, col);
-            mp[{rw, cl}][i] = 0;
-            row[r][i] = 0;
-            col[c][i] = 0;
-            a[r][c] = '.';
-        }
+        cout << endl;
     }
 }
-void solveSudoku(vector<vector<char>> &a)
-{
-    map<pair<int, int>, map<int, int>> mp;
-    vector<map<int, int>> row(9);
-    vector<map<int, int>> col(9);
-    for (int i = 0; i < 9; i++)
-    {
-        for (int j = 0; j < 9; j++)
-        {
-            if (a[i][j] != '.')
-            {
-                mp[{i / 3, j / 3}][a[i][j] - '0'] = 1;
-                row[i][a[i][j] - '0'] = 1;
-                col[j][a[i][j] - '0'] = 1;
+
+// Function to check if a number can be placed in a particular cell
+bool canPlace(int grid[9][9], int row, int col, int num) {
+    for (int i = 0; i < 9; i++) {
+        if (grid[row][i] == num || grid[i][col] == num) {
+            return false;
+        }
+    }
+
+    int startRow = row - row % 3;
+    int startCol = col - col % 3;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (grid[startRow + i][startCol + j] == num) {
+                return false;
             }
         }
     }
-    helper(0, 0, a, mp, row, col);
+
+    return true;
 }
 
-int main()
-{
-    vector<vector<char>> soduku = {
-        {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
-        {'6', '.', '.', '1', '9', '5', '.', '.', '.'},
-        {'.', '9', '8', '.', '.', '.', '.', '6', '.'},
-        {'8', '.', '.', '.', '6', '.', '.', '.', '3'},
-        {'4', '.', '.', '8', '.', '3', '.', '.', '1'},
-        {'7', '.', '.', '.', '2', '.', '.', '.', '6'},
-        {'.', '6', '.', '.', '.', '.', '2', '8', '.'},
-        {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
-        {'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
-    solveSudoku(soduku);
+// Backtracking function to solve Sudoku
+bool solveSudoku(int grid[9][9]) {
+    int row, col;
+
+    // Find the first empty cell
+    bool foundEmpty = false;
+    for (row = 0; row < 9; row++) {
+        for (col = 0; col < 9; col++) {
+            if (grid[row][col] == 0) {
+                foundEmpty = true;
+                break;
+            }
+        }
+        if (foundEmpty) {
+            break;
+        }
+    }
+
+    // If no empty cell is found, puzzle is solved
+    if (!foundEmpty) {
+        return true;
+    }
+
+    // Try placing numbers 1-9 in the empty cell
+    for (int num = 1; num <= 9; num++) {
+        if (canPlace(grid, row, col, num)) {
+            grid[row][col] = num;
+
+            // Recursively solve the rest of the puzzle
+            if (solveSudoku(grid)) {
+                return true;
+            }
+
+            // If the placement doesn't lead to a solution, backtrack
+            grid[row][col] = 0;
+        }
+    }
+
+    return false;
+}
+
+int main() {
+    int grid[9][9] = {
+        {5, 3, 0, 0, 7, 0, 0, 0, 0},
+        {6, 0, 0, 1, 9, 5, 0, 0, 0},
+        {0, 9, 8, 0, 0, 0, 0, 6, 0},
+        {8, 0, 0, 0, 6, 0, 0, 0, 3},
+        {4, 0, 0, 8, 0, 3, 0, 0, 1},
+        {7, 0, 0, 0, 2, 0, 0, 0, 6},
+        {0, 6, 0, 0, 0, 0, 2, 8, 0},
+        {0, 0, 0, 4, 1, 9, 0, 0, 5},
+        {0, 0, 0, 0, 8, 0, 0, 7, 9}
+    };
+
+    if (solveSudoku(grid)) {
+        cout << "Sudoku solved:" << endl;
+        printGrid(grid);
+    } else {
+        cout << "No solution exists." << endl;
+    }
+
+    return 0;
 }
